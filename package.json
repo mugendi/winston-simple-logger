@@ -1,0 +1,24 @@
+{
+  "name": "winston-simple-logger",
+  "version": "1.0.0",
+  "description": "A simple and convenient wrapper around Winston to simplify the repetitive tasks of setting up logs, formatters and transports.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "logger",
+    "winston",
+    "rotate",
+    "logs",
+    "console"
+  ],
+  "author": "Anthony Mugendi <ngurumugz@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "fastest-validator": "^1.13.0",
+    "strip-ansi": "6",
+    "winston": "^3.8.1",
+    "winston-daily-rotate-file": "^4.7.1"
+  }
+}
