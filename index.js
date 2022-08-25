@@ -16,7 +16,7 @@ const winston = require('winston'),
 	util = require('util'),
 	path = require('path'),
 	stripAnsi = require('strip-ansi'),
-	Validator = require('fastest-validator');
+	ValidateOrThrow = require('validate-or-throw');
 
 const { combine, timestamp, printf, colorize, json } = winston.format;
 require('winston-daily-rotate-file');
@@ -33,7 +33,8 @@ function override() {
 
 	let text = args
 		.map((v) => {
-			if ('object' == typeof v) v = util.inspect(v, true, 4, false);
+			if ('object' == typeof v)
+				v = util.inspect(v, { depth: 4, colors: true });
 			return v;
 		})
 		.join(', ');
@@ -55,16 +56,15 @@ function format_file_transport(fileTransport, opts) {
 
 	if (opts.rotateLogs) {
 		let filename = path
-				.basename(fileTransport.filename)
-				.split('.')
-				.map((n, i) => {
-					if (i === 0) n += '-%DATE%';
-					return n;
-				})
-				.join('.'),
-			dir = path.dirname(fileTransport.filename) || __dirname;
+			.basename(fileTransport.filename)
+			.split('.')
+			.map((n, i) => {
+				if (i === 0) n += '-%DATE%';
+				return n;
+			})
+			.join('.');
 
-		fileTransport.filename = path.join(dir, filename);
+		fileTransport.filename = path.join(opts.logsDir, filename);
 		fileTransport.datePattern = opts.datePattern || 'YYYY-MM-DD';
 		fileTransport.maxFiles = fileTransport.maxFiles || '14d';
 
@@ -74,20 +74,6 @@ function format_file_transport(fileTransport, opts) {
 	}
 
 	// console.log(fileTransport);
-}
-
-function validate_or_throw(val, schema) {
-	const v = new Validator();
-	const check = v.compile(schema);
-	const valid = check(val);
-
-	if (valid !== true) {
-		throw new Error(
-			`Validation Error! \n  - ${valid
-				.map((e) => e.message)
-				.join('\n  - ')}`
-		);
-	}
 }
 
 function arrify(v) {
@@ -118,6 +104,7 @@ function validate_opts(opts) {
 		$$strict: 'remove',
 		overwriteConsole: { type: 'boolean', optional: true, default: false },
 		rotateLogs: { type: 'boolean', optional: true, default: true },
+		logsDir: { type: 'string', optional: true, default: require.main.path },
 		fileTransports: [
 			{
 				type: 'array',
@@ -128,7 +115,7 @@ function validate_opts(opts) {
 				},
 			},
 		],
-		datePattern: {
+		dateFormat: {
 			type: 'string',
 			optional: true,
 		},
@@ -141,7 +128,7 @@ function validate_opts(opts) {
 		},
 	};
 
-	validate_or_throw(opts, schema);
+	ValidateOrThrow(opts, schema);
 }
 
 module.exports = (opts = {}) => {
